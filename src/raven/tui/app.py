@@ -44,7 +44,7 @@ class RavenApp(App):
     # Reactive state
     team_size = reactive(2)
     agent_configs = reactive([])
-    is_running = reactive(False)
+    agents_running = reactive(False)
     selected_agent = reactive(None)
     project_root = reactive("")
     show_help = reactive(False)
@@ -165,14 +165,14 @@ class RavenApp(App):
 
     def action_pause(self) -> None:
         """Pause agent execution."""
-        if self.is_running:
-            self.is_running = False
+        if self.agents_running:
+            self.agents_running = False
             self.notify("Execution paused", severity="info")
 
     def action_resume(self) -> None:
         """Resume agent execution."""
-        if not self.is_running:
-            self.is_running = True
+        if not self.agents_running:
+            self.agents_running = True
             self.notify("Execution resumed", severity="info")
 
     def action_tasks(self) -> None:

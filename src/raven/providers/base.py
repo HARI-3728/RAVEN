@@ -68,7 +68,7 @@ class ProviderResult:
     finish reasons, and the raw response for debugging.
     """
     
-    __slots__ = ('content', 'model', 'provider', 'usage', 'finish_reason', 'raw_response', 'error', 'latency', '_success')
+    __slots__ = ('content', 'model', 'provider', 'usage', 'finish_reason', 'raw_response', 'error', 'latency', '_success', 'tool_calls')
     
     def __init__(
         self,
@@ -81,6 +81,7 @@ class ProviderResult:
         error: Optional[ProviderError] = None,
         latency: Optional[float] = None,
         success: Optional[bool] = None,
+        tool_calls: Optional[List[Dict[str, Any]]] = None,
     ):
         """Initialize ProviderResult.
         
@@ -94,6 +95,7 @@ class ProviderResult:
             error: ProviderError if the call failed
             latency: Time taken for the request in seconds
             success: Explicit success override flag
+            tool_calls: List of requested tool calls from the model
         """
         self.content = content if content is not None else ""
         self.model = model
@@ -104,6 +106,12 @@ class ProviderResult:
         self.error = error
         self.latency = latency
         self._success = success
+        self.tool_calls = list(tool_calls) if tool_calls is not None else []
+    
+    @property
+    def has_tool_calls(self) -> bool:
+        """Check if the result contains tool calls."""
+        return bool(self.tool_calls)
     
     @property
     def success(self) -> bool:

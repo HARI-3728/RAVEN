@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Dict, Type, Optional
+from typing import Dict, Type, Optional, Any
 import importlib
 import os
 
@@ -103,6 +103,31 @@ class ProviderRegistry:
             Model identifier or None
         """
         return self._default_models.get(provider_name)
+
+    def get_supported_models(self, provider_name: str) -> list[str]:
+        """Get list of supported models for a provider."""
+        try:
+            inst = self.get_instance(provider_name)
+            if inst is None:
+                cls = self.get(provider_name)
+                try:
+                    inst = cls({})
+                    return list(inst.supported_models)
+                except Exception:
+                    pass
+            else:
+                return list(inst.supported_models)
+        except Exception:
+            pass
+
+        fallbacks = {
+            "openai": ["gpt-4o", "gpt-4o-mini", "gpt-4-turbo", "gpt-3.5-turbo"],
+            "anthropic": ["claude-3-5-sonnet-20241022", "claude-3-opus-20240229", "claude-3-sonnet-20240229", "claude-3-haiku-20240307"],
+            "gemini": ["gemini-1.5-pro", "gemini-1.5-flash", "gemini-2.0-flash-exp"],
+            "local": ["codellama:34b", "llama3:8b", "mistral:7b", "deepseek-coder:6.7b"],
+            "openai_compatible": ["gpt-4o", "default"],
+        }
+        return fallbacks.get(provider_name, [self.get_default_model(provider_name) or "default"])
     
     def create_instance(self, provider_name: str, config: dict = None) -> Any:
         """Create a provider instance from configuration.

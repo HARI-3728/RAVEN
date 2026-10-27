@@ -41,65 +41,42 @@ class PathValidator:
         
         return (resolved if is_safe else None, is_safe)
     
-    def validate_read(self, path: str) -> Tuple[bool, Optional[str], str]:
-        """Validate that a file read operation is permitted.
+    def validate_read(self, path: str, allow_directory: bool = True) -> Tuple[bool, Optional[str], str]:
+        """Validate that a file or directory read operation is permitted.
         
         Args:
-            path: File path to read (relative or absolute)
+            path: File or directory path to read (relative or absolute)
+            allow_directory: Whether directory paths are accepted
             
         Returns:
             (is_allowed, resolved_path, reason) tuple
         """
-        # Handle absolute paths
-        if os.path.isabs(path):
-            resolved, is_safe = self._resolve_and_validate(path)
-            if not is_safe:
-                return False, None, f"Path traversal detected: {path} escapes project boundary"
-            if not os.path.isfile(resolved):
-                return False, None, f"File not found: {path}"
-            return True, resolved, ""
-        
-        # Relative path - resolve relative to project root
-        resolved, is_safe = self._resolve_and_validate(os.path.join(self.project_root, path))
-        if not is_safe:
+        resolved, is_safe = self._resolve_and_validate(path)
+        if not is_safe or not resolved:
             return False, None, f"Path traversal detected: {path} escapes project boundary"
         
-        if not os.path.isfile(resolved):
-            return False, None, f"File not found: {path}"
+        if not os.path.exists(resolved):
+            return False, None, f"Path not found: {path}"
+            
+        if not allow_directory and os.path.isdir(resolved):
+            return False, None, f"Expected file, found directory: {path}"
         
         return True, resolved, ""
     
-    def validate_write(self, path: str) -> Tuple[bool, Optional[str], str]:
+    def validate_write(self, path: str, allow_overwrite: bool = True) -> Tuple[bool, Optional[str], str]:
         """Validate that a file write operation is permitted.
         
         Args:
             path: File path to write (relative or absolute)
+            allow_overwrite: Whether overwriting/modifying an existing file is allowed
             
         Returns:
             (is_allowed, resolved_path, reason) tuple
         """
-        # Handle absolute paths
-        if os.path.isabs(path):
-            resolved, is_safe = self._resolve_and_validate(path)
-            if not is_safe:
-                return False, None, f"Path traversal detected: {path} escapes project boundary"
-            # Check parent directory exists or can be created
-            parent_dir = os.path.dirname(resolved)
-            if parent_dir and not os.path.isdir(parent_dir):
-                # Try to create parent directories
-                try:
-                    os.makedirs(parent_dir, exist_ok=True)
-                except Exception as e:
-                    return False, None, f"Cannot create parent directory: {str(e)}"
-            if os.path.exists(resolved):
-                return False, None, f"File already exists: {path}. Use review/approval for modifications."
-            return True, resolved, ""
-        
-        # Relative path - resolve relative to project root
-        resolved, is_safe = self._resolve_and_validate(os.path.join(self.project_root, path))
-        if not is_safe:
+        resolved, is_safe = self._resolve_and_validate(path)
+        if not is_safe or not resolved:
             return False, None, f"Path traversal detected: {path} escapes project boundary"
-        
+
         # Check parent directory exists or can be created
         parent_dir = os.path.dirname(resolved)
         if parent_dir and not os.path.isdir(parent_dir):
@@ -107,10 +84,10 @@ class PathValidator:
                 os.makedirs(parent_dir, exist_ok=True)
             except Exception as e:
                 return False, None, f"Cannot create parent directory: {str(e)}"
-        
-        if os.path.exists(resolved):
-            return False, None, f"File already exists: {path}. Use review/approval for modifications."
-        
+
+        if os.path.exists(resolved) and not allow_overwrite:
+            return False, None, f"File already exists: {path}. Overwriting not allowed."
+
         return True, resolved, ""
     
     def validate_delete(self, path: str) -> Tuple[bool, Optional[str], str]:
