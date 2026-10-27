@@ -1,0 +1,95 @@
+# RAVEN Default Configuration
+# Default settings for a new RAVEN workspace
+
+# Team configuration
+team_size: 3
+
+# Default providers (referenced by name in agent configs)
+providers:
+  openai:
+    api_key_env: OPENAI_API_KEY
+    default_model: gpt-4o
+    supported_models:
+      - gpt-4o
+      - gpt-4-turbo
+      - gpt-3.5-turbo
+    timeout: 30
+    max_retries: 2
+
+  anthropic:
+    api_key_env: ANTHROPIC_API_KEY
+    default_model: claude-3-sonnet-20240229
+    supported_models:
+      - claude-3-sonnet-20240229
+      - claude-3-haiku-20240307
+    timeout: 30
+    max_retries: 2
+
+  gemini:
+    api_key_env: GEMINI_API_KEY
+    default_model: gemini-1.5-flash
+    supported_models:
+      - gemini-1.5-flash
+      - gemini-1.5-pro
+    timeout: 30
+    max_retries: 2
+
+# Default roles
+roles:
+  developer:
+    description: "Writes code, implements features, and produces production-quality software"
+    default_instructions: "Write clean, maintainable, and well-documented code."
+  reviewer:
+    description: "Reviews code for quality, security, and best practices"
+    default_instructions: "Review code for quality, security vulnerabilities, and best practices."
+  tester:
+    description: "Writes and runs tests for code changes"
+    default_instructions: "Write comprehensive tests and verify code correctness."
+
+# Default team template (3-agent developer team)
+team_templates:
+  developer_3:
+    count: 3
+    agents:
+      - provider: openai
+        model: gpt-4o
+        role: developer
+        instructions: "Write clean, maintainable, and well-documented code."
+      
+      - provider: anthropic
+        model: claude-3-sonnet-20240229
+        role: reviewer
+        instructions: "Review code for quality, security vulnerabilities, and best practices."
+      
+      - provider: openai
+        model: gpt-4o
+        role: tester
+        instructions: "Write comprehensive tests and verify code correctness."
+
+  developer_5:
+    count: 5
+    agents:
+      - provider: openai
+        model: gpt-4o
+        role: developer
+        instructions: "Write clean, maintainable, and well-documented code."
+      
+      - provider: anthropic
+        model: claude-3-sonnet-20240229
+        role: reviewer
+        instructions: "Review code for quality, security vulnerabilities, and best practices."
+      
+      - provider: openai
+        model: gpt-4o
+        role: tester
+        instructions: "Write comprehensive tests and verify code correctness."
+      
+      - provider: gemini
+        model: gemini-1.5-pro
+        role: analyst
+        instructions: "Analyze data and provide actionable insights."
+      
+      - provider: local
+        model: codellama:34b
+        role: iterator
+        instructions: "Iterate over data structures and extract values systematically."

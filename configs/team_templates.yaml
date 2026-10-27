@@ -1,0 +1,101 @@
+# RAVEN Team Templates
+# Predefined team configurations for common use cases
+
+# Standard developer team (3 agents)
+developer_3:
+  name: "Standard Developer Team"
+  count: 3
+  description: "3-agent team for general software development"
+  agents:
+    - provider: openai
+      model: gpt-4o
+      role: developer
+      instructions: "Write clean, maintainable, and well-documented code following best practices."
+    
+    - provider: anthropic
+      model: claude-3-sonnet-20240229
+      role: reviewer
+      instructions: "Review all code for quality, security vulnerabilities, and adherence to best practices. Provide constructive feedback."
+    
+    - provider: openai
+      model: gpt-4o
+      role: tester
+      instructions: "Write comprehensive unit tests, integration tests, and verify code correctness. Ensure test coverage > 80%."
+
+# Full-spectrum team (5 agents)
+full_spectrum:
+  name: "Full Spectrum Team"
+  count: 5
+  description: "5-agent team covering all aspects of software development"
+  agents:
+    - provider: openai
+      model: gpt-4o
+      role: developer
+      instructions: "Write production-quality code, focusing on maintainability, readability, and scalability."
+    
+    - provider: anthropic
+      model: claude-3-sonnet-20240229
+      role: reviewer
+      instructions: "Thoroughly review code for quality, security, performance, and maintainability. Flag all concerns and suggest improvements."
+    
+    - provider: openai
+      model: gpt-4o
+      role: tester
+      instructions: "Write thorough tests including unit, integration, and property-based tests. Verify code meets requirements."
+    
+    - provider: gemini
+      model: gemini-1.5-pro
+      role: analyst
+      instructions: "Analyze code metrics, performance data, and provide insights on complexity, maintainability, and optimization opportunities."
+    
+    - provider: local
+      model: codellama:34b
+      role: iterator
+      instructions: "Iterate over large data structures, refactor code, and perform systematic codebase transformations."
+
+# Data analysis team (4 agents)
+data_analysis:
+  name: "Data Analysis Team"
+  count: 4
+  description: "4-agent team for data analysis and processing workflows"
+  agents:
+    - provider: openai
+      model: gpt-4o
+      role: analyst
+      instructions: "Analyze datasets, identify patterns, and provide data-driven insights and recommendations."
+    
+    - provider: anthropic
+      model: claude-3-opus-20240229
+      role: interpreter
+      instructions: "Interpret analysis results, explain findings in clear language, and translate data insights into actionable items."
+    
+    - provider: gemini
+      model: gemini-1.5-pro
+      role: visualizer
+      instructions: "Create visual representations of data trends, charts, and graphs to illustrate findings."
+    
+    - provider: local
+      model: codellama:34b
+      role: iterator
+      instructions: "Process data pipelines, iterate over datasets, and extract values systematically for further analysis."
+
+# Web development team (3 agents)
+web_dev:
+  name: "Web Development Team"
+  count: 3
+  description: "3-agent team focused on web development"
+  agents:
+    - provider: openai
+      model: gpt-4o
+      role: developer
+      instructions: "Build web applications with modern frameworks, focusing on responsive design, performance, and accessibility."
+    
+    - provider: anthropic
+      model: claude-3-sonnet-20240229
+      role: reviewer
+      instructions: "Review web code for security vulnerabilities (XSS, CSRF), performance, and accessibility compliance (WCAG)."
+    
+    - provider: openai
+      model: gpt-4o
+      role: tester
+      instructions: "Write tests for web functionality, API endpoints, and user interactions. Verify cross-browser compatibility."

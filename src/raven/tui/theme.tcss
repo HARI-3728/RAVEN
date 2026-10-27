@@ -1,0 +1,172 @@
+/* RAVEN TUI Theme - cyber-inspired terminal aesthetic */
+
+/* Color palette */
+$background: #080A12;
+$electric-blue: #168CFF;
+$purple: #842BFF;
+$text-primary: #E0E0E0;
+$text-secondary: #888888;
+
+/* Root theme styles */
+body {
+    background-color: $background;
+    color: $text-primary;
+    font-family: "Fira Code", "Source Code Pro", "Consolas", monospace;
+    font-size: 13px;
+}
+
+/* Panel styles */
+panel {
+    background-color: #0e1117;
+    border: solid $electric-blue;
+    border-width: 0 1 1 1;
+}
+
+/* Focused panel */
+panel:focus {
+    background-color: #1a1d24;
+}
+
+/* Button styles */
+.button {
+    background-color: transparent;
+    color: $electric-blue;
+    border: 1px solid $electric-blue;
+    border-radius: 4px;
+}
+
+.button:hover {
+    background-color: $electric-blue;
+    color: $background;
+}
+
+.button:focus {
+    background-color: $purple;
+    color: $background;
+}
+
+/* Disabled button */
+.button:disabled {
+    color: $text-secondary;
+    border-color: $text-secondary;
+}
+
+/* Input styles */
+input {
+    background-color: #1e2127;
+    color: $text-primary;
+    border: 1px solid #303338;
+}
+
+/* Input focus */
+input:focus {
+    border-color: $electric-blue;
+    outline: none;
+}
+
+/* Status bar */
+.status-bar {
+    background-color: $background;
+    border-top: solid 1px #303338;
+    color: $text-secondary;
+    font-size: 11px;
+}
+
+/* Agent card styles */
+.agent-card {
+    min-height: 80px;
+    padding: 8px;
+    margin: 4px 0;
+    border: 1px solid #303338;
+    border-radius: 6px;
+}
+
+.agent-card.selected {
+    border-color: $electric-blue;
+    background-color: #1a1d24;
+}
+
+/* Activity log */
+.activity-log {
+    max-height: 300px;
+    overflow-y: auto;
+    padding: 8px;
+    background-color: #0e1117;
+    border: 1px solid #303338;
+    border-radius: 6px;
+}
+
+/* Task board */
+.task-board .task-item {
+    padding: 4px 8px;
+    margin: 2px;
+    border-radius: 4px;
+    font-size: 12px;
+}
+
+.task-item.developer { background-color: #4A90E2; color: white; }
+.task-item.reviewer { background-color: #7ED321; color: white; }
+.task-item.tester { background-color: #F8CF53; color: #000000; }
+.task-item.analyst { background-color: #ED6A5A; color: white; }
+.task-item.architect { background-color: #6C5CE7; color: white; }
+
+/* Help overlay */
+.help-overlay {
+    background-color: rgba(0, 0, 0, 0.8);
+    color: $text-primary;
+    padding: 8px;
+    border-radius: 6px;
+    margin: 4px 0;
+}
+
+/* Tabbed content styling */
+.tabpane {
+    background-color: #0e1117;
+    border: solid $electric-blue;
+    border-width: 1 1 1 1;
+}
+
+/* Tab styles */
+.tabpanes .tab {
+    color: $text-secondary;
+    background-color: #1a1d24;
+    border: solid #303338;
+    border-width: 1 1 0 1;
+    margin-bottom: -1px;
+}
+
+.tabpanes .tab:hover {
+    color: $electric-blue;
+    background-color: #21262d;
+}
+
+.tabpanes .tab.--active {
+    color: $text-primary;
+    background-color: $background;
+    border-color: $electric-blue;
+}
+
+/* Progress bar */
+.progress-bar {
+    background-color: #303338;
+    border: solid $electric-blue;
+    border-width: 0 1 1 1;
+}
+
+/* Loading indicator */
+.loading-indicator {
+    color: $electric-blue;
+}
+
+/* Agent status dot styling */
+.status-dot {
+    min-width: 1em;
+    min-height: 1em;
+    border-radius: 50%;
+}
+
+/* Screen title styling */
+.screen-title {
+    color: $electric-blue;
+    text-shadow: none;
+}

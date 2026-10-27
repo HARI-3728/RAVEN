@@ -1,0 +1,75 @@
+# RAVEN Role Definitions
+# Predefined roles available for agent assignment
+
+# Developer role
+developer:
+  description: "Writes code, implements features, and produces production-quality software"
+  default_instructions: "Write clean, maintainable, and well-documented code."
+  required_skills:
+    - programming
+    - code_architecture
+    - software_design
+
+# Reviewer role
+reviewer:
+  description: "Reviews code for quality, security, and best practices"
+  default_instructions: "Review code for quality, security vulnerabilities, and best practices."
+  required_skills:
+    - code_review
+    - security
+    - attention_to_detail
+
+# Tester role
+tester:
+  description: "Writes and runs tests for code changes"
+  default_instructions: "Write comprehensive tests and verify code correctness."
+  required_skills:
+    - testing
+    - quality_assurance
+    - test_automation
+
+# Analyst role
+analyst:
+  description: "Analyzes data and provides insights"
+  default_instructions: "Analyze data and provide actionable insights."
+  required_skills:
+    - data_analysis
+    - interpretation
+    - reporting
+
+# Architect role
+architect:
+  description: "Designs system architecture and guidelines"
+  default_instructions: "Design system architecture following best practices."
+  required_skills:
+    - system_design
+    - scalability
+    - tradeoff_analysis
+
+# Interpreter role
+interpreter:
+  description: "Interprets results and explains findings"
+  default_instructions: "Interpret results and explain findings clearly."
+  required_skills:
+    - interpretation
+    - communication
+    - synthesis
+
+# Iterator role
+iterator:
+  description: "Iterates over data structures and extracts values"
+  default_instructions: "Iterate over data structures and extract values systematically."
+  required_skills:
+    - iteration
+    - data_structures
+    - systematic_approach
+
+# Custom role example
+data_engineer:
+  description: "Engineers data pipelines and ETL processes"
+  default_instructions: "Engineer robust data pipelines and ETL processes."
+  required_skills:
+    - python
+    - sql
+    - data_pipelines
+    - etl
