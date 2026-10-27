@@ -8,13 +8,13 @@ import json
 from typing import Dict, Any, Optional, Type, get_type_hints
 from pathlib import Path
 
-from pydantic import BaseModel, Field, ValidationError, validator
+from pydantic import BaseModel, Field, ValidationError, model_validator
 
 
 class BaseConfig(BaseModel):
     """Base configuration class with common validation."""
     
-    model_config = {"extra": "forbid"}  # Disallow extra fields
+    model_config = {"extra": "ignore"}  # Allow extra fields for flexibility
     
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary."""
@@ -77,7 +77,7 @@ def load_config(
     if config_data is None:
         config_data = load_json(path)
     
-    if config_data is None:
+    if config_data is None or not isinstance(config_data, dict):
         return None
     
     try:
@@ -85,7 +85,41 @@ def load_config(
         if isinstance(config_data, BaseModel):
             return config_data
         
-        instance = model(**config_data)
+        target_data = config_data
+        
+        # If config_data is a dict-of-sections (like providers.yaml or team_templates.yaml)
+        if issubclass(model, ProviderConfig):
+            if "name" not in target_data or "api_key_env" not in target_data:
+                # Find the first entry that looks like a provider definition
+                for k, v in target_data.items():
+                    if isinstance(v, dict) and ("api_key_env" in v or "default_model" in v):
+                        target_data = {"name": k, **v}
+                        break
+        elif issubclass(model, AgentConfig):
+            if "provider" not in target_data:
+                for k, v in target_data.items():
+                    if isinstance(v, dict):
+                        if "agents" in v and isinstance(v["agents"], list) and v["agents"]:
+                            target_data = dict(v["agents"][0])
+                            break
+                        elif "default_model" in v or "api_key_env" in v:
+                            target_data = {
+                                "provider": k,
+                                "model": v.get("default_model", "gpt-4o"),
+                                "role": "developer",
+                                "instructions": "Write clean code.",
+                            }
+                            break
+        elif issubclass(model, TeamConfig):
+            if "num_agents" not in target_data and "count" not in target_data:
+                for k, v in target_data.items():
+                    if isinstance(v, dict) and ("count" in v or "agents" in v):
+                        target_data = dict(v)
+                        if "count" in target_data and "num_agents" not in target_data:
+                            target_data["num_agents"] = target_data["count"]
+                        break
+        
+        instance = model(**target_data)
         
         # Apply environment variable overrides if enabled
         if env_override:
@@ -115,7 +149,7 @@ def _apply_env_overrides(instance: BaseModel) -> BaseModel:
     import os
     
     # Get all field names
-    fields = instance.model_fields
+    fields = type(instance).model_fields
     
     if not fields:
         return instance
@@ -186,6 +220,7 @@ class AgentConfig(BaseConfig):
 class TeamConfig(BaseConfig):
     """Configuration for the agent team."""
     num_agents: int = Field(
+        ...,
         ge=2, le=5, 
         description="Number of agents (2-5)"
     )
@@ -193,3 +228,17 @@ class TeamConfig(BaseConfig):
         default_factory=list, 
         description="List of agent configurations"
     )
+    name: Optional[str] = None
+    description: Optional[str] = None
+    count: Optional[int] = None
+
+    @model_validator(mode="before")
+    @classmethod
+    def handle_count(cls, data: Any) -> Any:
+        if isinstance(data, dict):
+            data = dict(data)
+            if "num_agents" not in data and "count" in data:
+                data["num_agents"] = data["count"]
+            elif "num_agents" in data and "count" not in data:
+                data["count"] = data["num_agents"]
+        return data

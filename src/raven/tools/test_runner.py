@@ -18,8 +18,9 @@ import os
 import tempfile
 from typing import Dict, Any, List, Optional, Tuple
 
-from ...security.command_validator import CommandValidator
-from ...tools.filesystem import FileSystemTools, GitTools
+from ..security.command_validator import CommandValidator
+from .filesystem import FileSystemTools
+from .git_tools import GitTools
 
 
 class TestRunner:
@@ -53,7 +54,7 @@ class TestRunner:
         self._temp_dirs: List[str] = []
         self._test_results: List[dict] = []
     
-    def run_mocked_test(
+    async def run_mocked_test(
         self,
         test_name: str,
         test_code: str,
@@ -175,7 +176,7 @@ registry = ProviderRegistry()
 class MockOpenAIProvider(OpenAIProvider):
     async def _generate_response_core(self, prompt, context, model_id):
         return ProviderResult(
-            content=f"[MOCKED OPENAI {model_id}]: {prompt[:50]}...",
+            content=f"[MOCKED OPENAI {{model_id}}]: {{prompt[:50]}}...",
             model=model_id,
             provider="openai",
             usage={{"prompt_tokens": len(prompt.split()), "completion_tokens": 50}},
@@ -195,7 +196,7 @@ registry.register("openai", MockOpenAIProvider)
 class MockAnthropicProvider(AnthropicProvider):
     async def _generate_response_core(self, prompt, context, model_id):
         return ProviderResult(
-            content=f"[MOCKED ANTHROPIC {model_id}]: Analysis of: {{prompt[:50]}...]",
+            content=f"[MOCKED ANTHROPIC {{model_id}}]: Analysis of: {{prompt[:50]}}...",
             model=model_id,
             provider="anthropic",
             usage={{"prompt_tokens": len(prompt.split()), "completion_tokens": 40}},
@@ -215,7 +216,7 @@ registry.register("anthropic", mock_anthropic)
 class MockGeminiProvider(GeminiProvider):
     async def _generate_response_core(self, prompt, context, model_id):
         return ProviderResult(
-            content=f"[MOCKED GEMINI {model_id}]: Response to: {{prompt[:50]}...]",
+            content=f"[MOCKED GEMINI {{model_id}}]: Response to: {{prompt[:50]}}...",
             model=model_id,
             provider="gemini",
             usage={{"prompt_tokens": len(prompt.split()), "completion_tokens": 30}},
@@ -238,7 +239,7 @@ class MockLocalProvider(LocalProvider):
 
     async def _call_local_model(self, prompt, model_id):
         return ProviderResult(
-            content=f"[MOCKED LOCAL {model_id}]: Processed: {{prompt[:50]}...]",
+            content=f"[MOCKED LOCAL {{model_id}}]: Processed: {{prompt[:50]}}...",
             model=model_id,
             provider="local",
             usage={{"prompt_tokens": len(prompt.split()), "completion_tokens": 35}},
@@ -308,7 +309,7 @@ os.environ["RAVEN_PROJECT_ROOT"] = "{tmpdir}"
             count += matches
         return count
     
-    def run_approved_command(
+    async def run_approved_command(
         self,
         command: str,
         cwd: Optional[str] = None,

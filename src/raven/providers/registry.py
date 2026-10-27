@@ -10,11 +10,50 @@ import os
 class ProviderRegistry:
     """Registry of available AI providers."""
     
-    def __init__(self):
+    def __init__(self, register_defaults: bool = True):
         """Initialize the provider registry."""
         self._providers: Dict[str, Type] = {}
         self._default_models: Dict[str, str] = {}
         self._instance_map: Dict[str, Any] = {}
+        if register_defaults:
+            self._register_defaults()
+
+    def _register_defaults(self) -> None:
+        """Register built-in default providers."""
+        try:
+            from .openai_provider import OpenAIProvider
+            self.register("openai", OpenAIProvider)
+            self.set_default_model("openai", "gpt-4o")
+        except Exception:
+            pass
+
+        try:
+            from .anthropic_provider import AnthropicProvider
+            self.register("anthropic", AnthropicProvider)
+            self.set_default_model("anthropic", "claude-3-sonnet-20240229")
+        except Exception:
+            pass
+
+        try:
+            from .gemini_provider import GeminiProvider
+            self.register("gemini", GeminiProvider)
+            self.set_default_model("gemini", "gemini-1.5-flash")
+        except Exception:
+            pass
+
+        try:
+            from .local_provider import LocalProvider
+            self.register("local", LocalProvider)
+            self.set_default_model("local", "codellama:34b")
+        except Exception:
+            pass
+
+        try:
+            from .openai_compatible_provider import OpenAICompatibleProvider
+            self.register("openai_compatible", OpenAICompatibleProvider)
+            self.set_default_model("openai_compatible", "gpt-4o")
+        except Exception:
+            pass
     
     def register(self, name: str, provider_class: Type) -> None:
         """Register a provider class under a name.

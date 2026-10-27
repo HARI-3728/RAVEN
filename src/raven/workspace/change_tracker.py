@@ -6,7 +6,7 @@ import asyncio
 import json
 from typing import Dict, Any, List, Optional
 from pathlib import Path
-from ...tools.git_tools import GitTools
+from ..tools.git_tools import GitTools
 
 
 class ChangeTracker:

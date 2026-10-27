@@ -68,18 +68,19 @@ class ProviderResult:
     finish reasons, and the raw response for debugging.
     """
     
-    __slots__ = ('content', 'model', 'provider', 'usage', 'finish_reason', 'raw_response', 'error', 'latency')
+    __slots__ = ('content', 'model', 'provider', 'usage', 'finish_reason', 'raw_response', 'error', 'latency', '_success')
     
     def __init__(
         self,
-        content: str,
-        model: str,
-        provider: str,
+        content: Optional[str] = None,
+        model: str = "",
+        provider: str = "",
         usage: Optional[Dict[str, Any]] = None,
         finish_reason: Optional[str] = None,
         raw_response: Optional[Any] = None,
         error: Optional[ProviderError] = None,
         latency: Optional[float] = None,
+        success: Optional[bool] = None,
     ):
         """Initialize ProviderResult.
         
@@ -92,8 +93,9 @@ class ProviderResult:
             raw_response: The raw API response for debugging
             error: ProviderError if the call failed
             latency: Time taken for the request in seconds
+            success: Explicit success override flag
         """
-        self.content = content
+        self.content = content if content is not None else ""
         self.model = model
         self.provider = provider
         self.usage = usage or {}
@@ -101,17 +103,21 @@ class ProviderResult:
         self.raw_response = raw_response
         self.error = error
         self.latency = latency
+        self._success = success
     
     @property
     def success(self) -> bool:
         """Check if the provider call was successful (no error)."""
+        if self._success is not None:
+            return self._success
         return self.error is None
     
     @property
     def has_content(self) -> bool:
         """Check if the result contains meaningful content."""
         return bool(self.content and self.content.strip())
-    
+
+
     def __str__(self) -> str:
         if self.error:
             return f"ProviderResult(error={self.error}, model={self.model})"
@@ -121,6 +127,13 @@ class ProviderResult:
         return (f"ProviderResult(content={self.content!r}, model={self.model!r}, "
                 f"provider={self.provider!r}, success={self.success}, "
                 f"latency={self.latency})")
+
+
+def format_prompt(system: str = "", user: str = "") -> str:
+    """Format a system/user prompt pair."""
+    if system and system.strip():
+        return f"System: {system}\nUser: {user}"
+    return user
 
 
 from enum import Enum

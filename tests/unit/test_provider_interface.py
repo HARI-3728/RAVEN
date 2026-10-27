@@ -11,9 +11,8 @@ import asyncio
 
 from raven.providers.base import (
     AIProvider, ProviderResult, ProviderError, ModelNotFoundError,
-    TimeoutError, RateLimitError, CredentialError,
+    TimeoutError, RateLimitError, CredentialError, format_prompt,
 )
-from raven.providers.base import format_prompt
 
 
 class TestProviderResult:
@@ -202,7 +201,7 @@ class TestMockProvider:
     
     def test_mock_provider_validate_credentials(self, mock_provider):
         """Test mock provider validates credentials."""
-        result = asyncio.get_event_loop().run_until_complete(mock_provider.validate_credentials())
+        result = asyncio.run(mock_provider.validate_credentials())
         assert result is True
     
     def test_mock_provider_format_prompt(self, mock_provider):
@@ -213,12 +212,12 @@ class TestMockProvider:
     
     def test_mock_provider_generate_with_retry_success(self, mock_provider):
         """Test generate_with_retry returns on success."""
-        result = asyncio.get_event_loop().run_until_complete(
+        result = asyncio.run(
             mock_provider.generate_with_retry("prompt")
         )
         assert result.success is True
     
     def test_mock_provider_cancel_generate(self, mock_provider):
         """Test cancel_generate_response."""
-        asyncio.get_event_loop().run_until_complete(mock_provider.cancel_generate_response())
+        asyncio.run(mock_provider.cancel_generate_response())
         # Should not raise

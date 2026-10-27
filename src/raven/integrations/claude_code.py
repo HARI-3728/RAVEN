@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 import os
+import shutil
+import subprocess
 import asyncio
 from typing import Optional, Dict, Any
 
-from ...integrations.base import IntegrationBase, SubprocessManager
+from .base import IntegrationBase, SubprocessManager
 
 
 class ClaudeCodeIntegration(IntegrationBase):
@@ -37,27 +39,26 @@ class ClaudeCodeIntegration(IntegrationBase):
         ]
         
         for path in possible_paths:
-            if os.path.isfile(path) or await self._path_exists(path):
-                self.claude_code_path = path
+            resolved = shutil.which(path) or (path if os.path.isfile(path) else None)
+            if resolved:
+                self.claude_code_path = resolved
                 self.installed = True
                 return True
         
         # Try running --version
         try:
-            proc = asyncio.create_subprocess_exec(
-                "claude-code", "--version",
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE,
+            res = subprocess.run(
+                ["claude-code", "--version"],
+                capture_output=True,
+                text=True,
+                timeout=5,
             )
-            _, stderr = asyncio.get_event_loop().run_until_complete(
-                asyncio.wait_for(proc.communicate(), timeout=5)
-            )
-            version_output = stderr.decode().strip()
-            if "claude-code" in version_output.lower() or "anthropic" in version_output.lower():
+            version_output = (res.stdout + res.stderr).strip().lower()
+            if "claude-code" in version_output or "anthropic" in version_output:
                 self.claude_code_path = "claude-code"
                 self.installed = True
                 return True
-        except (FileNotFoundError, asyncio.TimeoutError, Exception):
+        except Exception:
             pass
         
         self.installed = False

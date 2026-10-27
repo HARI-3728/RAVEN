@@ -5,8 +5,8 @@ from __future__ import annotations
 import os
 import re
 from typing import Dict, Any, List, Optional
-from ...security.command_validator import CommandValidator
-from ...security.path_validator import PathValidator
+from ..security.command_validator import CommandValidator
+from ..security.path_validator import PathValidator
 
 
 class PermissionManager:

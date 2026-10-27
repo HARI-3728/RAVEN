@@ -19,5 +19,3 @@ from .agents.agent_factory import AgentFactory
 # TUI exports
 from .tui.app import RavenApp
 from .tui.theme import THEME
-
-print(f"RAVEN v{__version__} initialized. Use 'raven' to start.")

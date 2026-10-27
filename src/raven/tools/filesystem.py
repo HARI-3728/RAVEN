@@ -18,8 +18,8 @@ import json
 import re
 from typing import Dict, Any, List, Optional, Tuple
 
-from ...security.path_validator import PathValidator
-from ...security.command_validator import CommandValidator
+from ..security.path_validator import PathValidator
+from ..security.command_validator import CommandValidator
 
 
 class FileSystemTools:

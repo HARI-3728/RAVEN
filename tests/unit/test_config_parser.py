@@ -1,4 +1,4 @@
-"""Unit tests for RAVEN configuration parsing.
+"""Unit tests for RAVEN configuration parsing."""
 
 from __future__ import annotations
 

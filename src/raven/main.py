@@ -2,17 +2,7 @@
 """RAVEN main entry point."""
 
 import sys
-import asyncio
-
-from typer import Typer, run
-
 from .cli import app as cli_app
-
-cli_app.add_typer(
-    Typer(name="raven"),
-    name="",
-    help="RAVEN multi-AI development workspace",
-)
 
 
 def main():

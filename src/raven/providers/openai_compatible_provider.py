@@ -5,7 +5,7 @@ from __future__ import annotations
 import os
 from typing import Optional, Dict, Any
 
-from ...providers.base import AIProvider, ProviderResult
+from .base import AIProvider, ProviderResult
 
 
 class OpenAICompatibleProvider(AIProvider):

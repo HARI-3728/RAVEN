@@ -1,9 +1,33 @@
 #!/usr/bin/env python3
 """RAVEN CLI commands using Typer."""
 
-from typer import Typer, Option, Argument
+from typer import Typer, Option, Argument, Context, Exit
 
 app = Typer(name="raven", help="RAVEN multi-AI development workspace")
+
+
+def version_callback(value: bool):
+    if value:
+        from .version import __version__
+        print(f"RAVEN version {__version__}")
+        raise Exit()
+
+
+@app.callback(invoke_without_command=True)
+def default_callback(
+    ctx: Context,
+    version: bool = Option(
+        False,
+        "--version",
+        "-v",
+        help="Show RAVEN version and exit",
+        callback=version_callback,
+        is_eager=True,
+    ),
+):
+    """RAVEN multi-AI development workspace."""
+    if ctx.invoked_subcommand is None:
+        start()
 
 @app.command("init", help="Initialize a new RAVEN workspace")
 def init(

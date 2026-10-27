@@ -126,14 +126,8 @@ class AgentFactory:
         provider_class = self.provider_registry.get(provider_name)
         config = self._get_provider_config(provider_name)
         
-        if config:
-            return provider_class(config)
-        
-        # Default to OpenAI if provider not found
-        import warnings
-        warnings.warn(f"Provider '{provider_name}' not found, defaulting to OpenAI")
-        from .providers.openai_provider import OpenAIProvider
-        return OpenAIProvider({})
+        config = self._get_provider_config(provider_name) or {}
+        return provider_class(config)
     
     def _get_provider_config(self, provider_name: str) -> Optional[dict]:
         """Get provider configuration from registry or defaults.

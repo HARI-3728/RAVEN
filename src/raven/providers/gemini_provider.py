@@ -6,7 +6,7 @@ import os
 import asyncio
 from typing import Optional, Dict, Any
 
-from ...providers.base import AIProvider, ProviderResult, ProviderError, ModelNotFoundError, TimeoutError, RateLimitError, format_prompt
+from .base import AIProvider, ProviderResult, ProviderError, CredentialError, ModelNotFoundError, TimeoutError, RateLimitError, format_prompt
 
 
 class GeminiProvider(AIProvider):

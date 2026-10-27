@@ -4,10 +4,10 @@ from __future__ import annotations
 
 import os
 import asyncio
-import aiohttp
+import httpx
 from typing import Optional, Dict, Any
 
-from ...providers.base import AIProvider, ProviderResult, ProviderError, ModelNotFoundError, TimeoutError, RateLimitError, format_prompt
+from .base import AIProvider, ProviderResult, ProviderError, CredentialError, ModelNotFoundError, TimeoutError, RateLimitError, ProviderConnectionError, format_prompt
 
 
 class OpenAIProvider(AIProvider):
@@ -63,60 +63,56 @@ class OpenAIProvider(AIProvider):
             "max_tokens": 1000,
         }
         
-        timeout_client = aiohttp.ClientTimeout(total=self._timeout)
-        
         try:
-            async with aiohttp.ClientSession(timeout=timeout_client) as session:
-                async with session.post(
+            async with httpx.AsyncClient(timeout=self._timeout) as client:
+                response = await client.post(
                     "https://api.openai.com/v1/chat/completions",
                     headers=headers,
                     json=payload,
-                ) as response:
-                    # Check response status
-                    if response.status == 429:
-                        # Rate limit exceeded
-                        error_text = await response.text()
-                        raise RateLimitError(
-                            f"OpenAI rate limit exceeded: {error_text}"
-                        )
-                    
-                    if response.status != 200:
-                        error_text = await response.text()
-                        raise ProviderError(
-                            f"OpenAI API error {response.status}: {error_text}"
-                        )
-                    
-                    # Parse successful response
-                    data = await response.json()
-                    
-                    if not data.get("choices"):
-                        return ProviderResult(
-                            content="",
-                            model=model_id,
-                            provider="openai",
-                            usage={"prompt_tokens": 0, "completion_tokens": 0},
-                            finish_reason="stop",
-                            raw_response=data,
-                        )
-                    
-                    choice = data["choices"][0]
-                    content = choice.get("message", {}).get("content", "")
-                    finish_reason = choice.get("finish_reason", "stop")
-                    
-                    usage = data.get("usage", {})
-                    
+                )
+                
+                # Check response status
+                if response.status_code == 429:
+                    raise RateLimitError(
+                        f"OpenAI rate limit exceeded: {response.text}"
+                    )
+                
+                if response.status_code != 200:
+                    raise ProviderError(
+                        f"OpenAI API error {response.status_code}: {response.text}"
+                    )
+                
+                # Parse successful response
+                data = response.json()
+                
+                if not data.get("choices"):
                     return ProviderResult(
-                        content=content or "",
+                        content="",
                         model=model_id,
                         provider="openai",
-                        usage=usage,
-                        finish_reason=finish_reason,
+                        usage={"prompt_tokens": 0, "completion_tokens": 0},
+                        finish_reason="stop",
                         raw_response=data,
                     )
-                    
+                
+                choice = data["choices"][0]
+                content = choice.get("message", {}).get("content", "")
+                finish_reason = choice.get("finish_reason", "stop")
+                
+                usage = data.get("usage", {})
+                
+                return ProviderResult(
+                    content=content or "",
+                    model=model_id,
+                    provider="openai",
+                    usage=usage,
+                    finish_reason=finish_reason,
+                    raw_response=data,
+                )
+                
         except asyncio.TimeoutError:
             raise TimeoutError(f"OpenAI API request timed out after {self._timeout}s")
-        except (aiohttp.ClientError, asyncio.TimeoutError) as e:
+        except httpx.HTTPError as e:
             raise ProviderConnectionError(f"Connection error: {str(e)}")
         except Exception as e:
             raise ProviderError(f"OpenAI API call failed: {str(e)}")

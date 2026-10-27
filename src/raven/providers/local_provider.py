@@ -7,7 +7,7 @@ import subprocess
 import asyncio
 from typing import Optional, Dict, Any, List
 
-from ...providers.base import AIProvider, ProviderResult
+from .base import AIProvider, ProviderResult
 
 
 class LocalProvider(AIProvider):

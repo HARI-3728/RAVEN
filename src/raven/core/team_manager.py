@@ -199,7 +199,7 @@ class TeamManager:
         agent_errors = self._validate_agent_config(config, len(self.agent_configs))
         
         if agent_errors:
-            return False; f"Invalid agent config: {'; '.join(agent_errors)}"
+            return False, f"Invalid agent config: {'; '.join(agent_errors)}"
         
         self.agent_configs.append(config)
         return True, f"Added agent configuration {len(self.agent_configs)}"

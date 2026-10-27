@@ -7,9 +7,9 @@ import asyncio
 from typing import Dict, Any, Optional
 from pathlib import Path
 
-from ...tools.filesystem import FileSystemTools
-from ...workspace.project_detector import ProjectDetector
-from ...workspace.file_indexer import FileIndexer
+from ..tools.filesystem import FileSystemTools
+from .project_detector import ProjectDetector
+from .file_indexer import FileIndexer
 
 
 class WorkspaceManager:

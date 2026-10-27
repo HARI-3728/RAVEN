@@ -132,9 +132,9 @@ class TerminalTools:
                                 agent_id: str) -> Panel:
         """Format a request/response pair for display."""
         return Panel(
-            f"[bold {self.theme.get('electric_blue', '#168CFF')'}]Request from Agent {agent_id}:[/]\n"
+            f"[bold {self.theme.get('electric_blue', '#168CFF')}]Request from Agent {agent_id}:[/]\n"
             f"{request}\n\n"
-            f"[bold {self.theme.get('purple', '#842BFF')'}]Response:[/]\n"
+            f"[bold {self.theme.get('purple', '#842BFF')}]Response:[/]\n"
             f"{response}",
             box=box.DOUBLE,
             style=f"on {self.theme.get('background', '#080A12')}",
