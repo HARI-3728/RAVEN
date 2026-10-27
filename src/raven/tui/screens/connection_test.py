@@ -53,7 +53,7 @@ class ConnectionTestScreen(Screen):
 
             # Progress bar
             yield ProgressBar(id="progress-bar", total=len(self.agent_configs))
-            yield Static(id="progress-text", renderable="0/0 tested")
+            yield Static("0/0 tested", id="progress-text")
 
             yield Static("─" * 60)
 

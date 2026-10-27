@@ -76,9 +76,9 @@ class RavenApp(App):
         with Horizontal():
             # Left panel - Agent panel / help overlay
             with Vertical(id="left-panel"):
-                yield Static(id="agent-header", renderable="Agents")
-                yield Static(id="agent-list", renderable="No team configured")
-                yield Static(id="status-bar", renderable="")
+                yield Static("Agents", id="agent-header")
+                yield Static("No team configured", id="agent-list")
+                yield Static("", id="status-bar")
 
                 # Help overlay (initially hidden)
                 if self.show_help:
@@ -90,52 +90,31 @@ class RavenApp(App):
 
             # Right panel - Main content area with tabs
             with Vertical(id="right-panel"):
-                yield TabbedContent(
-                    (
-                        "Welcome",
-                        WelcomeScreen(),
-                    ),
-                    (
-                        "Project Setup",
-                        ProjectSetupScreen(),
-                    ),
-                    (
-                        "Team Size",
-                        TeamSizeScreen(),
-                    ),
-                    (
-                        "Agent Setup",
-                        AgentSetupScreen(team_size=self.team_size),
-                    ),
-                    (
-                        "Connection Test",
-                        ConnectionTestScreen(
+                with TabbedContent(initial="welcome"):
+                    with TabPane("Welcome", id="welcome"):
+                        yield WelcomeScreen()
+                    with TabPane("Project Setup", id="project_setup"):
+                        yield ProjectSetupScreen()
+                    with TabPane("Team Size", id="team_size"):
+                        yield TeamSizeScreen()
+                    with TabPane("Agent Setup", id="agent_setup"):
+                        yield AgentSetupScreen(team_size=self.team_size)
+                    with TabPane("Connection Test", id="connection_test"):
+                        yield ConnectionTestScreen(
                             agent_configs=self.agent_configs or []
-                        ),
-                    ),
-                    (
-                        "Live Execution",
-                        LiveExecutionScreen(
+                        )
+                    with TabPane("Live Execution", id="live_execution"):
+                        yield LiveExecutionScreen(
                             agent_configs=self.agent_configs or []
-                        ),
-                    ),
-                    (
-                        "Task Input",
-                        TaskInputScreen(),
-                    ),
-                    (
-                        "Agent Details",
-                        AgentDetailsScreen(),
-                    ),
-                    (
-                        "Diff Review",
-                        DiffReviewScreen(),
-                    ),
-                    (
-                        "Settings",
-                        SettingsScreen(),
-                    ),
-                )
+                        )
+                    with TabPane("Task Input", id="task_input"):
+                        yield TaskInputScreen()
+                    with TabPane("Agent Details", id="agent_details"):
+                        yield AgentDetailsScreen()
+                    with TabPane("Diff Review", id="diff_review"):
+                        yield DiffReviewScreen()
+                    with TabPane("Settings", id="settings"):
+                        yield SettingsScreen()
 
         # Bottom status bar
         yield Static(
@@ -218,12 +197,12 @@ class RavenApp(App):
         # Refresh the current panel content
         tabbed = self.query_one(TabbedContent)
         screen_name = tabbed.active
-        panel = tabbed.get_panel(screen_name)
-        if panel and hasattr(panel, "on_mount"):
-            try:
+        try:
+            panel = tabbed.get_pane(screen_name)
+            if panel and hasattr(panel, "on_mount"):
                 panel.on_mount()
-            except Exception:
-                pass
+        except Exception:
+            pass
 
 
 # Screen classes - simplified for foundation
@@ -351,9 +330,10 @@ class AgentSetupScreen(Static):
 
     def _recompose_cards(self) -> None:
         """Re-compose the agent cards based on current team_size."""
-        # Get the container and rebuild
-        container = self.query_one("#agent-setup-container", Vertical)
-        # Clear existing children (except header and title)
+        try:
+            container = self.query_one("#agent-setup-container", Vertical)
+        except Exception:
+            container = None
         # For foundation, just update the status bar
         try:
             status_bar = self.query_one("#status-bar", Static)
@@ -465,18 +445,47 @@ class AgentSetupScreen(Static):
         self.app.switch_screen("team_size")
 
 
+class ConnectionTestScreen(Static):
+    """Connection test screen for testing API connections with demo data."""
+
+    def __init__(self, agent_configs: list = None, **kwargs):
+        super().__init__(**kwargs)
+        self.agent_configs = agent_configs or []
+
+    def on_mount(self) -> None:
+        lines = [
+            "[bold]Connection Test[/]",
+            "─" * 40,
+            "Testing AI provider connections for configured agents:",
+            "",
+        ]
+        if self.agent_configs:
+            for i, config in enumerate(self.agent_configs):
+                p = config.get("provider", "unknown")
+                m = config.get("model", "unknown")
+                lines.append(f"  Agent {i + 1} ({p} / {m}): [green]Connected (Demo)[/]")
+        else:
+            lines.append("  [dim]No agents configured yet. Use 'c' to configure.[/]")
+        lines.append("")
+        lines.append("[dim]Press 's' to proceed to Live Execution[/]")
+        self.update("\n".join(lines))
+
+
 class LiveExecutionScreen(Static):
     """Live workspace screen with agent panels, activity feed, task board, and command input."""
 
     def __init__(self, agent_configs: list = None, **kwargs):
         super().__init__(**kwargs)
         self.agent_configs = agent_configs or []
-        self.is_running = True
+        self.execution_active = True
         self.current_agent_index = 0
 
     def on_mount(self) -> None:
         """Focus the command input."""
-        self.query_one("#command-input", Input).focus()
+        try:
+            self.query_one("#command-input", Input).focus()
+        except Exception:
+            pass
 
     def on_input_submitted(self, event: Input.Submitted) -> None:
         """Handle command submission."""
@@ -494,6 +503,7 @@ class LiveExecutionScreen(Static):
         command = command_input.value.strip()
         if not command:
             return
+        from datetime import datetime
         timestamp = datetime.now().strftime("%H:%M:%S")
         self.query_one("#bottom-status", Static).update(
             f"[{timestamp}] Command: {command}"
@@ -504,6 +514,7 @@ class LiveExecutionScreen(Static):
 
     def _simulate_agent_activity(self, command: str) -> None:
         """Simulate agent activity for demonstration."""
+        from datetime import datetime
         async def activity_loop():
             try:
                 status_text = self.query_one("#status-text", Static)
@@ -516,8 +527,7 @@ class LiveExecutionScreen(Static):
                 status_text = self.query_one("#status-text", Static)
                 status_text.update("Idle")
                 status_dot = self.query_one("#status-dot", Static)
-                status_dot.renderable = "●"
-                status_dot.styles = {"style": "green"}
+                status_dot.update("●")
             except Exception:
                 pass
             try:
@@ -530,14 +540,15 @@ class LiveExecutionScreen(Static):
             except Exception:
                 pass
             self.current_agent_index = (self.current_agent_index + 1) % len(self.agent_configs) if self.agent_configs else 0
+        import asyncio
         asyncio.get_event_loop().create_task(activity_loop())
 
     def action_pause(self) -> None:
         """Pause execution."""
-        self.is_running = False
+        self.execution_active = False
         try:
             status_dot = self.query_one("#status-dot", Static)
-            status_dot.renderable = "⏸️"
+            status_dot.update("⏸️")
             status_text = self.query_one("#status-text", Static)
             status_text.update("Paused")
         except Exception:
@@ -545,11 +556,10 @@ class LiveExecutionScreen(Static):
 
     def action_resume(self) -> None:
         """Resume execution."""
-        self.is_running = True
+        self.execution_active = True
         try:
             status_dot = self.query_one("#status-dot", Static)
-            status_dot.renderable = "●"
-            status_dot.styles = {"style": "green"}
+            status_dot.update("●")
             status_text = self.query_one("#status-text", Static)
             status_text.update("Running")
         except Exception:
@@ -557,11 +567,10 @@ class LiveExecutionScreen(Static):
 
     def action_stop(self) -> None:
         """Stop execution."""
-        self.is_running = False
+        self.execution_active = False
         try:
             status_dot = self.query_one("#status-dot", Static)
-            status_dot.renderable = "●"
-            status_dot.styles = {"style": "red"}
+            status_dot.update("●")
             status_text = self.query_one("#status-text", Static)
             status_text.update("Stopped")
             self.app.notify("Execution stopped (demo mode)", severity="warning")
@@ -604,7 +613,10 @@ class AgentDetailsScreen(Static):
 
     def on_mount(self) -> None:
         """Focus the screen."""
-        self.query_one("#close-btn", Button).focus()
+        try:
+            self.query_one("#close-btn", Button).focus()
+        except Exception:
+            pass
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         """Handle button presses."""
@@ -651,7 +663,10 @@ class SettingsScreen(Static):
 
     def on_mount(self) -> None:
         """Focus the screen."""
-        self.query_one("#save-btn", Button).focus()
+        try:
+            self.query_one("#save-btn", Button).focus()
+        except Exception:
+            pass
 
     def on_input_changed(self, event: Input.Changed) -> None:
         """Handle input changes."""

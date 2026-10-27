@@ -18,16 +18,10 @@ cli_app.add_typer(
 def main():
     """Main entry point for RAVEN."""
     try:
-        asyncio.run(_arun())
+        cli_app()
     except KeyboardInterrupt:
         print("\nRAVEN interrupted. Goodbye!")
         sys.exit(0)
-
-
-async def _arun():
-    """Async main entry point."""
-    # Start the CLI application
-    cli_app()
 
 
 if __name__ == "__main__":
