@@ -3,124 +3,126 @@
 from __future__ import annotations
 
 import os
+import asyncio
 import aiohttp
 from typing import Optional, Dict, Any
 
-from ...providers.base import AIProvider, ProviderResult, format_prompt
+from ...providers.base import AIProvider, ProviderResult, ProviderError, ModelNotFoundError, TimeoutError, RateLimitError, format_prompt
 
 
 class OpenAIProvider(AIProvider):
     """Adapter for OpenAI API models."""
     
-    def __init__(self, config: dict):
-        """Initialize the OpenAI provider.
-        
-        Args:
-            config: Provider configuration with keys:
-                - api_key_env: Environment variable name (default: "OPENAI_API_KEY")
-                - default_model: Default model identifier (default: "gpt-4o")
-                - supported_models: List of supported model IDs
-                - timeout: Request timeout in seconds
-                - max_retries: Maximum retry attempts
-        """
-        super().__init__(config)
-        self.api_key_env = config.get("api_key_env", "OPENAI_API_KEY")
-        self.default_model = config.get("default_model", "gpt-4o")
-        self.supported_models = config.get("supported_models", [
+    @property
+    def default_model(self) -> str:
+        return self.config.get("default_model", "gpt-4o")
+    
+    @property
+    def supported_models(self) -> list:
+        return self.config.get("supported_models", [
             "gpt-4o", "gpt-4-turbo", "gpt-3.5-turbo"
         ])
-        self.timeout = config.get("timeout", 30)
-        self.max_retries = config.get("max_retries", 2)
-        self._api_key = None
     
     async def _get_api_key(self) -> str:
         """Fetch API key from environment if not already cached."""
         if self._api_key is None:
             self._api_key = os.environ.get(self.api_key_env)
             if not self._api_key:
-                raise ValueError(
+                raise CredentialError(
                     f"OpenAI API key not found in environment variable '{self.api_key_env}'. "
                     "Set this variable before running RAVEN."
                 )
         return self._api_key
     
-    async def validate_credentials(self) -> bool:
-        """Validate that OpenAI API credentials are available and valid.
-        
-        Returns:
-            True if credentials appear valid, False otherwise
-        """
-        try:
-            key = await self._get_api_key()
-            # Basic validation: check that the key exists and has expected format
-            # We don't make a real API call here to avoid unnecessary charges
-            return bool(key and len(key) > 10)
-        except Exception:
-            return False
+    def _validate_key_format(self, key: str) -> bool:
+        """Validate the format of an OpenAI API key."""
+        # OpenAI keys start with 'sk-' and are typically 48+ characters
+        return bool(key and key.startswith("sk-") and len(key) > 20)
     
-    async def generate_response(self, 
-                                prompt: str, 
-                                context: str = "",
-                                model: Optional[str] = None) -> ProviderResult:
-        """Generate a response from the OpenAI API.
-        
-        Args:
-            prompt: The user prompt/request
-            context: Additional project context
-            model: Optional model override
-            
-        Returns:
-            ProviderResult with the model's response
-        """
-        model_id = model or self.default_model
-        
-        if model_id not in self.supported_models:
-            # Try to use it anyway; the API will reject if unsupported
-            pass
-        
+    async def _generate_response_core(
+        self,
+        prompt: str,
+        context: str,
+        model_id: str,
+    ) -> ProviderResult:
+        """Make actual HTTP call to OpenAI API."""
         api_key = await self._get_api_key()
         
-        # In a real implementation, this would make an HTTP request to the OpenAI API
-        # For now, we simulate a response based on the prompt
+        # Format the prompt properly
+        formatted_prompt = format_prompt(system="", user=prompt + "\n\n" + context)
+        
+        headers = {
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json",
+        }
+        
+        payload = {
+            "model": model_id,
+            "messages": [{"role": "user", "content": formatted_prompt}],
+            "temperature": 0.7,
+            "max_tokens": 1000,
+        }
+        
+        timeout_client = aiohttp.ClientTimeout(total=self._timeout)
+        
         try:
-            # Try actual API call
-            result = await self._call_openai_api(prompt, model_id, api_key)
-            return result
+            async with aiohttp.ClientSession(timeout=timeout_client) as session:
+                async with session.post(
+                    "https://api.openai.com/v1/chat/completions",
+                    headers=headers,
+                    json=payload,
+                ) as response:
+                    # Check response status
+                    if response.status == 429:
+                        # Rate limit exceeded
+                        error_text = await response.text()
+                        raise RateLimitError(
+                            f"OpenAI rate limit exceeded: {error_text}"
+                        )
+                    
+                    if response.status != 200:
+                        error_text = await response.text()
+                        raise ProviderError(
+                            f"OpenAI API error {response.status}: {error_text}"
+                        )
+                    
+                    # Parse successful response
+                    data = await response.json()
+                    
+                    if not data.get("choices"):
+                        return ProviderResult(
+                            content="",
+                            model=model_id,
+                            provider="openai",
+                            usage={"prompt_tokens": 0, "completion_tokens": 0},
+                            finish_reason="stop",
+                            raw_response=data,
+                        )
+                    
+                    choice = data["choices"][0]
+                    content = choice.get("message", {}).get("content", "")
+                    finish_reason = choice.get("finish_reason", "stop")
+                    
+                    usage = data.get("usage", {})
+                    
+                    return ProviderResult(
+                        content=content or "",
+                        model=model_id,
+                        provider="openai",
+                        usage=usage,
+                        finish_reason=finish_reason,
+                        raw_response=data,
+                    )
+                    
+        except asyncio.TimeoutError:
+            raise TimeoutError(f"OpenAI API request timed out after {self._timeout}s")
+        except (aiohttp.ClientError, asyncio.TimeoutError) as e:
+            raise ProviderConnectionError(f"Connection error: {str(e)}")
         except Exception as e:
-            # Fallback: return a simulated response
-            return ProviderResult(
-                content=self._simulate_response(prompt, model_id),
-                model=model_id,
-                provider="openai",
-                usage={"prompt_tokens": len(prompt.split()), "completion_tokens": 100},
-                finish_reason="stop",
-            )
+            raise ProviderError(f"OpenAI API call failed: {str(e)}")
     
-    async def _call_openai_api(self, prompt: str, model_id: str, api_key: str) -> ProviderResult:
-        """Make actual HTTP call to OpenAI API.
-        
-        This is a real implementation that would be used when API keys are available.
-        For the foundation step, we simulate the response.
-        """
-        # Actual implementation would use aiohttp or openai library
-        # For now, raise to trigger fallback
-        raise NotImplementedError("Actual OpenAI API call - implement with API key")
-    
-    def _simulate_response(self, prompt: str, model_id: str) -> str:
-        """Generate a simulated response for demonstration purposes."""
-        # Extract key terms from prompt to make response relevant
-        words = prompt.split()
-        key_terms = [w for w in words if len(w) > 4][:5]
-        terms_str = ". ".join(key_terms)
-        
-        return (f"[OpenAI {model_id} simulated response]\n\n"
-                f"Based on your prompt involving: {terms_str}.\n\n"
-                f"This would be a real AI model response when API credentials are configured.\n"
-                f"The model would analyze the task and provide code, analysis, or responses\n"
-                f"appropriate to the agent's role ({self.config.get('role', 'developer')}).")
-    
-    def get_model_info(self, model_id: str) -> Optional[Dict[str, Any]]:
-        """Get model information for OpenAI models."""
+    def _model_info_for_model(self, model_id: str) -> Optional[Dict[str, Any]]:
+        """Get model-specific information for OpenAI models."""
         model_info = {
             "gpt-4o": {
                 "context_window": 128000,
@@ -138,5 +140,16 @@ class OpenAIProvider(AIProvider):
                 "capabilities": ["text", "code"],
             },
         }
-        
         return model_info.get(model_id)
+    
+    async def validate_credentials(self) -> bool:
+        """Validate that OpenAI API credentials are available and valid."""
+        try:
+            key = await self._get_api_key()
+            if not key or not key.startswith("sk-"):
+                return False
+            # Try a minimal API call to validate
+            # In foundation step, just check key format
+            return True
+        except Exception:
+            return False
