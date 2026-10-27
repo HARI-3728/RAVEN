@@ -8,8 +8,6 @@ from textual.widgets import (
     Button,
     Select,
     Static,
-    Horizontal,
-    Vertical,
 )
 from textual.containers import Vertical, Horizontal as HContainer
 from textual.screen import Screen

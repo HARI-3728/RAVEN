@@ -10,15 +10,12 @@ from textual.widgets import (
     ProgressBar,
     LoadingIndicator,
     DataTable,
-    Panel,
-    ScrollView,
+    TabbedContent,
+    TabPane,
 )
 from textual.containers import (
     Vertical,
     Horizontal,
-    VerticalScroll,
-    TabbedContent,
-    TabPane,
 )
 from textual.screen import Screen
 from textual.binding import Binding

@@ -9,9 +9,8 @@ from textual.widgets import (
     Select,
     Switch,
     Button,
-    Horizontal,
-    Vertical,
 )
+from textual.containers import Vertical, Horizontal
 from textual.screen import Screen
 from textual.binding import Binding
 

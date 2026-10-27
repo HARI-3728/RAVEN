@@ -8,9 +8,8 @@ from textual.widgets import (
     Button,
     Select,
     Static,
-    Horizontal,
-    Vertical,
 )
+from textual.containers import Vertical, Horizontal
 from textual.screen import Screen
 from textual.binding import Binding
 

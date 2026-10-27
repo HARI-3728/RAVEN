@@ -1,4 +1,4 @@
-"""Welcome Screen - displays RAVEN name, ASCII logo, and startup options."""
+﻿"""Welcome Screen - displays RAVEN name, ASCII logo, and startup options."""
 
 from __future__ import annotations
 
@@ -32,7 +32,7 @@ class WelcomeScreen(Screen):
             "  _     _              _ _       _     _ ",
             " | |   | |            | | |     | |   | |",
             " | |___| | __ _ _ __ | | | __ _| |__ | |",
-            " | __/ | |/ _` | '_ \\| | |/ _` | '_ \\| |",
+            " | __/ | |/ _` | '_ \\ | | |/ _` | '_ \\ | |",
             " | |_| | | (_| | | | | | | (_| | | | |_|",
             "  \\___|_|\\__,_|_| |_|_|_|\\__,_|_|  \\__/",
         ]
@@ -51,10 +51,11 @@ class WelcomeScreen(Screen):
         full_render = "\n".join(lines)
 
         # Add the ASCII logo as a preview (truncated for foundation step)
+        logo_preview = "\n".join(logo_lines[:4])
         content.update(
-            f"{full_render}\\n\\n"
-            f"[dim]{'\\n'.join(logo_lines[:4])}[/]\\n"
-            f"[dim  dim](RAVEN - Multi-AI Development Workspace for terminal)[/]"
+            f"{full_render}\n\n"
+            f"[dim]{logo_preview}[/]\n"
+            f"[dim](RAVEN - Multi-AI Development Workspace for terminal)[/]"
         )
 
         # Trigger a re-render to show the updated content

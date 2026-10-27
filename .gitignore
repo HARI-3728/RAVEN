@@ -7,8 +7,8 @@ __pycache__/
 .dist/
 .build/
 env/
-venv/.env
 venv/
+.venv/
 
 # RAVEN specific
 .raven/

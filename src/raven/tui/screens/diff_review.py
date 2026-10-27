@@ -7,12 +7,11 @@ from textual.widgets import (
     Static,
     Input,
     Button,
-    Horizontal,
-    Vertical,
     DataTable,
     ProgressBar,
     LoadingIndicator,
 )
+from textual.containers import Vertical, Horizontal
 from textual.screen import Screen
 from textual.binding import Binding
 from pathlib import Path
@@ -42,13 +41,11 @@ class DiffReviewScreen(Screen):
             yield Static("─" * 60)
 
             # Diff preview
-            with Panel(
-                Static(self.diff_content or "[diff content will appear here]"),
-                title="Changes Preview",
-                border_style="cyan",
-                subtitle="Review the following changes before applying",
-            ):
-                pass
+            with Vertical(id="diff-preview"):
+                yield Static(self.diff_content or "[diff content will appear here]",
+                           title="Changes Preview",
+                           border_style="cyan",
+                           subtitle="Review the following changes before applying")
 
             yield Static("─" * 60)
 

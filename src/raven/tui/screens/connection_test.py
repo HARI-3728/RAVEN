@@ -7,11 +7,10 @@ from textual.widgets import (
     Static,
     Input,
     Button,
-    Horizontal,
-    Vertical,
     ProgressBar,
     LoadingIndicator,
 )
+from textual.containers import Horizontal, Vertical
 from textual.screen import Screen
 from textual.binding import Binding
 from pathlib import Path
